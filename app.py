@@ -5,7 +5,9 @@ import sys, re, requests, math, nltk
 nltk.download('stopwords')
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, session
-import numpy as np
+from numpy import dot
+from numpy.linalg import norm
+import numpy
 from math import log
 from elasticsearch import Elasticsearch
 from nltk.corpus import stopwords
@@ -53,7 +55,7 @@ def compute_tf(list1, count):
 	tf_d = []
 	i = 0
 	for wordcnt in list1:
-		tf_d[i] = wordcnt / count
+		tf_d.append(wordcnt / count)
 		i+=1
 
 	return tf_d
@@ -61,65 +63,93 @@ def compute_tf(list1, count):
 def compute_idf(n):
 
 	bow = set()
-	idf_d = {}
+	idf_d = []
 	
 	es = Elasticsearch([{'host':es_host, 'port':es_port}],
 timeout = 30)
 
-	for i in range(1,n):
-		res = es.index(index='data', doc_type='word', id=i)
+	for i in range(0,n):
+		res = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
 		for word in res:
 			bow.add(word)
 
 	j = 0
 	for t in bow:
 		cnt = 0
-		for i in range(1,n):
-			res = es.index(index='data', doc_type='word', id=i)
+		for i in range(0,n):
+			res = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
 			if t in res:
 				cnt+=1
-		idf_d[j] = log(n/cnt+1)
+		idf_d.append(log(n/cnt))
 		j+=1
 
 	return idf_d
 
 def compute_tfidf(list1,count,n):
-	return compute_tf(list1,count)*compute_idf(n)
+	tf = []
+	idf = []
+	res = []
+	tf = compute_tf(list1,count)
+	idf = compute_idf(n)
 
+	print(tf)
+	print(idf)
+	for i in range(0,count):
+		print(tf[i], idf[i], tf[i]*idf[i])
+		res.append(tf[i]*idf[i])
 
-def cosine_similarity(listA,listB):
+	return res
+
+def cosine_sim(listA,listB,n):
+	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 	u = []
 	v = []
 	valu = 0
 	valv = 0
 	bow = set()
 
-	for i in range(1,n):
-		res = es.index(index='data', doc_type='word', id=i)
+	for i in range(0,n):
+		res = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
 		for word in res:
 			bow.add(word)
 
 	for w in bow:
+		valu = 0
 		for t in listA:
 			if t==w:
-				valu+=1
+				valu=1
+				break
 		u.append(valu)
 	
 	for w in bow:
+		valv = 0
 		for t in listB:
 			if t==w:
-				valv+=1
+				valv=1
+				break
 		v.append(valv)
 
-	dotpro = np.dot(u,v)
-	return dotpro / norm(u)*norm(v)
-
+	print(u)
+	print(v)
+	dotpro = numpy.dot(u,v)
+	print(dotpro, (dotpro) / (norm(u) * norm(v)))
+	return (dotpro) / (norm(u) * norm(v))
 
 
 if __name__ == '__main__':
 	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
-	url = "http://impala.apache.org/"
+	url = "http://airavata.apache.org/"
 	id_ = 0
 	crawling(url,id_)
-	res = es.get(index='data', doc_type='word', id=id_)
-	print(res['_source'])
+	url = "http://buildr.apache.org/"
+	id_ = 1
+	crawling(url,id_)
+
+	
+	res1 = es.get(index='data', doc_type='word', id=0)['_source'].get('words')
+	res2 = es.get(index='data', doc_type='word', id=1)['_source'].get('words')
+
+	print(res1)
+	print(res2)
+	print(cosine_sim(res1, res1, 2))
+	print(cosine_sim(res1, res2, 2))
