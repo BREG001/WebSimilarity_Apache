@@ -1,19 +1,13 @@
 #!/usr/bin/python3
 #-*- coding: utf-8 -*-
 
-import sys
-import re
-import requests
-import math
-import nltk
+import sys, re, requests, math, nltk
 nltk.download('stopwords')
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, session
-import pandas as pd
 import numpy as np
 from math import log
 from elasticsearch import Elasticsearch
-
 from nltk.corpus import stopwords
 
 es_host="127.0.0.1"
@@ -123,8 +117,9 @@ def cosine_similarity(listA,listB):
 
 
 if __name__ == '__main__':
-		url = "http://impala.apache.org/"
-		id_ = 0
-		crawling(url,id_)
-		res = es.index(index='data', doc_type='word', id=0)
-		print(res)
+	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
+	url = "http://impala.apache.org/"
+	id_ = 0
+	crawling(url,id_)
+	res = es.get(index='data', doc_type='word', id=id_)
+	print(res['_source'])
