@@ -1,22 +1,25 @@
 #!/usr/bin/python3
 #-*- coding: utf-8 -*-
 
-import sys, re, requests, math, nltk
+import sys, re, requests, math, nltk, numpy, time, operator
 nltk.download('stopwords')
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, session
 from numpy import dot
 from numpy.linalg import norm
-import numpy
 from math import log
 from elasticsearch import Elasticsearch
 from nltk.corpus import stopwords
 
+app = Flask(__name__)
 es_host="127.0.0.1"
 es_port="9200"
 
-def crawling(url,id_):
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
+@app.route('/')
+def home():
+	return render_template('home.html')
+
+def crawling(url,id_,es):
 	words = []
 	freq = []
 	swlist = []
@@ -47,11 +50,10 @@ def crawling(url,id_):
 						break
 					k += 1
 
-	e={ "num":n, "words":words, "frequencies":freq }
-	res = es.index(index='data', doc_type='word', id=id_, body=e)
-	print(res)
+	e={ "words":words, "frequencies":freq }
+	es.index(index='data', doc_type='word', id=id_, body=e)
 
-def compute_tf(list1, count):
+def compute_tf(list1,count):
 	tf_d = []
 	i = 0
 	for wordcnt in list1:
@@ -60,13 +62,10 @@ def compute_tf(list1, count):
 
 	return tf_d
 
-def compute_idf(n):
+def compute_idf(n,es):
 
 	bow = set()
 	idf_d = []
-	
-	es = Elasticsearch([{'host':es_host, 'port':es_port}],
-timeout = 30)
 
 	for i in range(0,n):
 		res = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
@@ -85,23 +84,43 @@ timeout = 30)
 
 	return idf_d
 
-def compute_tfidf(list1,count,n):
+def compute_tfidf(list_,count,n,es):
 	tf = []
 	idf = []
 	res = []
-	tf = compute_tf(list1,count)
-	idf = compute_idf(n)
+	tf = compute_tf(list_,count)
+	idf = compute_idf(n,es)
 
-	print(tf)
-	print(idf)
-	for i in range(0,count):
-		print(tf[i], idf[i], tf[i]*idf[i])
-		res.append(tf[i]*idf[i])
+	if (n==1):
+		for i in range(0,count):
+			res.append(tf[i])
+	else:
+		for i in range(0,count):
+			res.append(tf[i]*idf[i])
 
+	e = es.get(index='data', doc_type='word', id=id_)['_source']
+	e['tfidf'] = res
+	es.index(index='data', doc_type='word', id=id_, body=e)
 	return res
 
-def cosine_sim(listA,listB,n):
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
+def compute_top10(id_,n,es):
+	freq = es.get(index='data', doc_type='word', id=id_)['_source'].get('frequencies')
+	length = len(freq)
+	word = es.get(index='data', doc_type='word', id=id_)['_source'].get('words')
+	top = []
+	tfidf = {}
+
+	compute_tfidf(freq,length,n,es)
+
+	for i in range(0,length):
+		tfidf[word[i]] = freq[i]
+	stfidf = sorted(tfidf.items(), key=operator.itemgetter(1))
+	for i in range(0,10):
+		top.append(stfidf[i][0])
+
+	return top
+
+def cosine_sim(listA,listB,n,es):
 	u = []
 	v = []
 	valu = 0
@@ -112,7 +131,6 @@ def cosine_sim(listA,listB,n):
 		res = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
 		for word in res:
 			bow.add(word)
-
 	for w in bow:
 		valu = 0
 		for t in listA:
@@ -120,7 +138,6 @@ def cosine_sim(listA,listB,n):
 				valu=1
 				break
 		u.append(valu)
-	
 	for w in bow:
 		valv = 0
 		for t in listB:
@@ -128,28 +145,64 @@ def cosine_sim(listA,listB,n):
 				valv=1
 				break
 		v.append(valv)
-
-	print(u)
-	print(v)
 	dotpro = numpy.dot(u,v)
-	print(dotpro, (dotpro) / (norm(u) * norm(v)))
+
 	return (dotpro) / (norm(u) * norm(v))
 
+def top3_sim(id_,n,es):
+	top = []
+	cosList=[]
+	listA = es.get(index='data', doc_type='word', id=id_)['_source'].get('words')
+	for i in range(0,n):
+		if (id_==i):
+			cosList.append(-1.0)
+		else:
+			listB = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
+			cosList.append(cosine_sim(listA,listB,n,es))
+
+	e = es.get(index='data', doc_type='word', id=id_)['_source']
+	e['cos'] = cosList
+	es.index(index='data', doc_type='word', id=id_, body=e)
+
+	for i in range(0,3):
+		largest=0
+		for j in range(0,n):
+			if (cosList[largest]<cosList[j]):
+				largest=j
+		top.append(largest)
+		cosList[largest]=-1.0
+
+	return top
 
 if __name__ == '__main__':
 	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
+
+	num = 4
+	time_ = 0.0
+	top3 = {}
+	top10 = {}
+
 	url = "http://airavata.apache.org/"
 	id_ = 0
-	crawling(url,id_)
+	crawling(url,id_,es)
 	url = "http://buildr.apache.org/"
 	id_ = 1
-	crawling(url,id_)
+	crawling(url,id_,es)
+	url = "http://myfaces.apache.org/"
+	id_ = 2
+	crawling(url,id_,es)
+	url = "http://buildr.apache.org/"
+	id_ = 3
+	crawling(url,id_,es)
 
-	
-	res1 = es.get(index='data', doc_type='word', id=0)['_source'].get('words')
-	res2 = es.get(index='data', doc_type='word', id=1)['_source'].get('words')
+	top10[0] = compute_top10(0,num,es)
+	top3[0] = top3_sim(0,num,es)
+	top10[1] = compute_top10(1,num,es)
+	top3[1] = top3_sim(1,num,es)
+	top10[2] = compute_top10(2,num,es)
+	top3[2] = top3_sim(2,num,es)
+	top10[3] = compute_top10(3,num,es)
+	top3[3] = top3_sim(3,num,es)
 
-	print(res1)
-	print(res2)
-	print(cosine_sim(res1, res1, 2))
-	print(cosine_sim(res1, res2, 2))
+	print(top10)
+	print(top3)
