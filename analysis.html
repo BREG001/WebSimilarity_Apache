@@ -31,15 +31,15 @@
 
   <script language="JavaScript">
 	function add() {
-   	var my_tbody = document.getElementById('my_tbody');
-  	var row = my_tbody.insertRow(my_tbody.rows.length);
+   	var row = document.getElementById('my_tbody').insertRow(my_tbody.rows.length);
 	var num = {{mynum}}
- 	var cell0 = row.insertCell(0);
+ 	var cell0 = row.insertCell();
 	var cell1 = row.insertCell(1);
+	var i = 0;
 	for(i=0;i<num;i++)
 	{
 		cell0.innerHTML = i;
-		cell1.innerHTML = {{myurl[id]}};
+		cell1.innerHTML = {{myurl[i]}};
 	}
 	}
   </script>
