@@ -21,17 +21,18 @@ def home():
 
 @app.route('/analysis', methods=['GET', 'POST'])
 def analysis():
-	
 	if request.method =='POST':
 		f = open('urls.txt', 'r')
 		num = 4
 		url = []
+
 		while True:
 			line = f.readline()
 			if not line:
 				break
 			url.append(line[:len(line)-2])
-		return render_template('analysis.html', myurl=url, mynum=num)		
+		return render_template('analysis.html', url=url, num=num)		
+
 
 
 	

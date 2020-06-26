@@ -16,7 +16,15 @@
  </head>
 
  <body>
-
+  <h1>
+   {{num}}
+   <ol>
+    <li>{{url[0]}}</li>
+    <li>{{url[1]}}</li>
+    <li>{{url[2]}}</li>
+    <li>{{url[3]}}</li>
+   </ol>
+  </h1>
   <h2>
    <button onclick="add()">test</button>
    <table>
@@ -32,12 +40,12 @@
   <script language="JavaScript">
 	function add() {
    		var row = document.all["my_tbody"].insertRow();
-		var num = {{mynum}}
+		var num = {{num}}
  		var cell0 = row.insertCell(0);
 		var cell1 = row.insertCell(1);
 		var i = 0;
 		cell0.innerHTML = i;
-		cell1.innerHTML = i;
+		cell1.innerHTML = ;
 	}
   </script>
 
