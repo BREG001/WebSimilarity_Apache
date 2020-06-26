@@ -21,14 +21,15 @@
     <thead>
      <th>id</th>
      <th>url</th>
-     {% for i in url %}
-     <td>
-      <tr>test</tr>
-      <tr>{{i}}</tr>
-     </td>
-     {% endfor %}
     </thead>
-    <tbody id="my_tbody"></tbody>
+    <tbody id="my_tbody">
+     {% for i in url %}
+     <tr>
+      <td>test</td>
+      <td>{{i}}</td>
+     </tr>
+     {% endfor %}
+    </tbody>
    </table>
 
   </h2>
