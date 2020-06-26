@@ -31,16 +31,13 @@
 
   <script language="JavaScript">
 	function add() {
-   	var row = document.getElementById('my_tbody').insertRow(my_tbody.rows.length);
-	var num = {{mynum}}
- 	var cell0 = row.insertCell();
-	var cell1 = row.insertCell(1);
-	var i = 0;
-	for(i=0;i<num;i++)
-	{
-		cell0.innerHTML = i;
-		cell1.innerHTML = {{myurl[i]}};
-	}
+   		var row = document.getElementById('my_tbody').insertRow(my_tbody.rows.length);
+		var num = {{mynum}}
+ 		var cell0 = row.insertCell();
+		var cell1 = row.insertCell(1);
+		var i = 0;
+		cell0.innerHTML = 'a';
+		cell1.innerHTML = {{myurl[1]}};
 	}
   </script>
 
