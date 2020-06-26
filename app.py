@@ -21,12 +21,11 @@ def home():
 
 @app.route('/analysis', methods=['GET', 'POST'])
 def analysis():
-	
 	if request.method =='POST':
 		url = []
 		num = 0
 		geturl(url,num)
-		return render_template('analysis.html', myurl=url, mynum=num)		
+		return render_template('analysis.html', url=url, num=num)		
 
 def geturl(url, num):
 	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
