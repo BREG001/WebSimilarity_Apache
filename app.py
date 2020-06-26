@@ -104,6 +104,7 @@ def compute_tfidf(list_,count,n,es):
 	return res
 
 def compute_top10(id_,n,es):
+	start = time.time()
 	freq = es.get(index='data', doc_type='word', id=id_)['_source'].get('frequencies')
 	length = len(freq)
 	word = es.get(index='data', doc_type='word', id=id_)['_source'].get('words')
@@ -118,6 +119,7 @@ def compute_top10(id_,n,es):
 	for i in range(0,10):
 		top.append(stfidf[i][0])
 
+	print(time.time()-start)
 	return top
 
 def cosine_sim(listA,listB,n,es):
@@ -152,6 +154,7 @@ def cosine_sim(listA,listB,n,es):
 def top3_sim(id_,n,es):
 	top = []
 	cosList=[]
+	start = time.time()
 	listA = es.get(index='data', doc_type='word', id=id_)['_source'].get('words')
 	for i in range(0,n):
 		if (id_==i):
@@ -172,28 +175,32 @@ def top3_sim(id_,n,es):
 		top.append(largest)
 		cosList[largest]=-1.0
 
+	print(time.time()-start)
 	return top
 
 if __name__ == '__main__':
 	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
-
+	f = open('urls.txt', 'r')
 	num = 4
 	time_ = 0.0
 	top3 = {}
 	top10 = {}
+	url = []
 
-	url = "http://airavata.apache.org/"
+	while True:
+		line = f.readline()
+		if not line:
+			break
+		url.append(line[:len(line)-2])
+	print(url)
 	id_ = 0
-	crawling(url,id_,es)
-	url = "http://buildr.apache.org/"
+	crawling(url[id_],id_,es)
 	id_ = 1
-	crawling(url,id_,es)
-	url = "http://myfaces.apache.org/"
+	crawling(url[id_],id_,es)
 	id_ = 2
-	crawling(url,id_,es)
-	url = "http://buildr.apache.org/"
+	crawling(url[id_],id_,es)
 	id_ = 3
-	crawling(url,id_,es)
+	crawling(url[id_],id_,es)
 
 	top10[0] = compute_top10(0,num,es)
 	top3[0] = top3_sim(0,num,es)
