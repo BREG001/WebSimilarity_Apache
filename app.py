@@ -38,7 +38,7 @@ def analysis():
 					break
 				num += 1
 				url.append(line[:len(line)-2])
-		return render_template('analysis.html', url=url)
+		return render_template('analysis.html', num=num, url=url)
 
 def crawling(url,id_,es):
 	words = []

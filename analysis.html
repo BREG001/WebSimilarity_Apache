@@ -25,24 +25,26 @@
 	</div>
 	<div style="margin: auto;">
 		<table>
-			<thead>
-				<th>result</th>
-				<th>url</th>
-				<th>time</th>
-				<th>TF-IDF</th>
-				<th>COS_similarity</th>
-			</thead>
-			<tbody id="my_tbody">
-				{% for i in url %}
-				<tr>
-					<td></td>
-					<td>{{i}}</td>
-					<td></td>
-					<td></td>
-					<td></td>
-				</tr>
-				{% endfor %}
-			</tbody>
+		<thead>
+			<th>result</th>
+			<th>url</th>
+			<th>words</th>
+			<th>time</th>
+			<th>TF-IDF</th>
+			<th>COS_similarity</th>
+		</thead>
+		<tbody id="my_tbody">
+			{% for i in range(0,num) %}
+			<tr>
+				<td></td>
+				<td>{{url[i]}}</td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			{% endfor %}
+		</tbody>
 		</table>
 	</div>
 
