@@ -2,38 +2,48 @@
 <meta charset = "utf-8">
 
 <html>
-<head>
-	<title>URL 리스트</title>
-	<style type="text/css">
-		table, tr, td{
-			border : 1px solid black;
-			text-align: center;
-		}
-		td{
-			width: 20px;
-		}
-	</style>
-	<body>
-	<script type="text/javascript">
-		var rows={{mynum}};
-		var cnt=0;
-		var table = "";
+ <head>
 
-		for(var i=0;i<rows;i++)
-		{
-			table +='<tr>';
-			
-			table += '<td>'+(cnt+1)+'</td>';
-			table += '<td>'+'{{myurl[cnt]}}'+'</td>';
-			cnt++;
+  <title>URL list</title>
+  <style>
+   table, tr, td{
+    	border : 1px solid black;
+    	text-align: center;
+   }
+   td{
+    	width: 20px;
+   }
+  </style>
 
-			table+='</tr>';
-		}
+ </head>
 
-		document.write("<table border=1>"+table+'</table>')
-		
-	</script>
-	</body>
-</head>
+ <body>
+
+  <h2>
+
+   <table>
+    <thead>
+     <th>id</th>
+     <th>url</th>
+    </thead>
+    <tbody id="my_tbody"></tbody>
+   </table>
+
+  </h2>
+
+  <script type="text/javascript">
+   	var my_tbody = document.getElementById('my_tbody');
+  	var row = my_tbody.insertRow(my_tbody.rows.length);
+	var num = {{mynum}}
+ 	var cell0 = row.insertCell(0);
+	var cell1 = row.insertCell(1);
+	for(i=0;i<num;i++)
+	{
+		cell0.innerHTML = i;
+		cell1.innerHTML = {{myurl[id]}};
+	}
+  </script>
+
+ </body>
 
 </html>
