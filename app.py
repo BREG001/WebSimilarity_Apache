@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 
 import sys, re, requests, math, nltk, numpy, time, operator
-
 nltk.download('stopwords')
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, session
@@ -15,7 +14,6 @@ from nltk.corpus import stopwords
 app = Flask(__name__)
 es_host="127.0.0.1"
 es_port="9200"
-
 
 @app.route('/')
 def home():
@@ -113,9 +111,7 @@ def compute_tfidf(list_,count,n,es):
 	return res
 
 def compute_top10(id_,n,es):
-
 	start = time.time()
-
 	freq = es.get(index='data', doc_type='word', id=id_)['_source'].get('frequencies')
 	length = len(freq)
 	word = es.get(index='data', doc_type='word', id=id_)['_source'].get('words')
@@ -129,7 +125,6 @@ def compute_top10(id_,n,es):
 	stfidf = sorted(tfidf.items(), key=operator.itemgetter(1))
 	for i in range(0,10):
 		top.append(stfidf[i][0])
-
 	print(time.time()-start)
 	return top
 
@@ -166,7 +161,6 @@ def top3_sim(id_,n,es):
 	top = []
 	cosList=[]
 	start = time.time()
-
 	listA = es.get(index='data', doc_type='word', id=id_)['_source'].get('words')
 	for i in range(0,n):
 		if (id_==i):
@@ -191,39 +185,5 @@ def top3_sim(id_,n,es):
 
 	return top
 
-if __name__ == '__main__':
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
-	f = open('urls.txt', 'r')
-	num = 4
-	time_ = 0.0
-	top3 = {}
-	top10 = {}
-	url = []
 
-	while True:
-		line = f.readline()
-		if not line:
-			break
-		url.append(line[:len(line)-2])
-	print(url)
-	id_ = 0
-	crawling(url[id_],id_,es)
-	id_ = 1
-	crawling(url[id_],id_,es)
-	id_ = 2
-	crawling(url[id_],id_,es)
-	id_ = 3
-	crawling(url[id_],id_,es)
-
-	top10[0] = compute_top10(0,num,es)
-	top3[0] = top3_sim(0,num,es)
-	top10[1] = compute_top10(1,num,es)
-	top3[1] = top3_sim(1,num,es)
-	top10[2] = compute_top10(2,num,es)
-	top3[2] = top3_sim(2,num,es)
-	top10[3] = compute_top10(3,num,es)
-	top3[3] = top3_sim(3,num,es)
-
-	print(top10)
-	print(top3)
 
