@@ -2,18 +2,21 @@
 <meta charset = "utf-8">
 
 <html>
-	<head>
-		<title> Home Page</title>
-	</head>
+<head>
+	<title> Home Page </title>
+	<style>
 
-	<body>
+	</style>
+</head>
+
+<body>
+	<div style="margin: auto;">
+		<h1> Apache Similarity Calculator </h1>
 		<form method="POST" action="/analysis">
-			<h1> 링크를 입력하세요 </h1>
-			URL <input name="name" type="text">
-			<button type="submit"> 입력 </button>
-
-			<h2> 링크 파일을 불러오세요 </h2>
+			<input type="text" name="url_one" value="enter the url...">
+			<button type="submit"> Submit </button> <br>
 			<input type="file" name = "file" id="file">
 		</form>
-	</body>
+	</div>
+</body>
 </html>

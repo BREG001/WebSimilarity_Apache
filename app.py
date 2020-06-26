@@ -21,21 +21,25 @@ def home():
 
 @app.route('/analysis', methods=['GET', 'POST'])
 def analysis():
+	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 	if request.method =='POST':
-		f = open('urls.txt', 'r')
-		num = 4
 		url = []
+		if (request.form('url_one')):
+			url.append(request.form('url_one'))
+		elif (request.form('file'))
+			num = 0
+			f_on = request.files['file']
+			f_on.save('urls.txt')
+			f_off = open('urls.txt', 'r')
 
-		while True:
-			line = f.readline()
-			if not line:
-				break
-			url.append(line[:len(line)-2])
-		return render_template('analysis.html', url=url, num=num)		
+			while True:
+				line = f_off.readline()
+				if not line:
+					break
+				num += 1
+				url.append(line[:len(line)-2])
+		return render_template('analysis.html', url=url)
 
-
-
-	
 def crawling(url,id_,es):
 	words = []
 	freq = []
