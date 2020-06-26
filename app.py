@@ -23,29 +23,17 @@ def home():
 def analysis():
 	
 	if request.method =='POST':
+		f = open('urls.txt', 'r')
+		num = 4
 		url = []
-		num = 0
-		geturl(url,num)
+		while True:
+			line = f.readline()
+			if not line:
+				break
+			url.append(line[:len(line)-2])
 		return render_template('analysis.html', myurl=url, mynum=num)		
 
-def geturl(url, num):
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
-	f = open('urls.txt', 'r')
-	num = 4
 
-	while True:
-		line = f.readline()
-		if not line:
-			break
-		url.append(line[:len(line)-2])
-	id_ = 0
-	crawling(url[id_],id_,es)
-	id_ = 1
-	crawling(url[id_],id_,es)
-	id_ = 2
-	crawling(url[id_],id_,es)
-	id_ = 3
-	crawling(url[id_],id_,es)
 	
 def crawling(url,id_,es):
 	words = []
