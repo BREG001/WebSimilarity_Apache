@@ -18,7 +18,7 @@
  <body>
 
   <h2>
-
+   <button onclick="add()">test</button>
    <table>
     <thead>
      <th>id</th>
@@ -29,7 +29,8 @@
 
   </h2>
 
-  <script type="text/javascript">
+  <script language="JavaScript">
+	function add() {
    	var my_tbody = document.getElementById('my_tbody');
   	var row = my_tbody.insertRow(my_tbody.rows.length);
 	var num = {{mynum}}
@@ -39,6 +40,7 @@
 	{
 		cell0.innerHTML = i;
 		cell1.innerHTML = {{myurl[id]}};
+	}
 	}
   </script>
 
