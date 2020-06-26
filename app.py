@@ -16,18 +16,38 @@ app = Flask(__name__)
 es_host="127.0.0.1"
 es_port="9200"
 
-
 @app.route('/')
 def home():
 	return render_template('home.html')
 
 @app.route('/analysis', methods=['GET', 'POST'])
-def analysis(url):
+def analysis():
 	
 	if request.method =='POST':
-		df = pd.DataFrame(url)
-		return render_template('analysis.html', urllist=df)		
+		url = []
+		num = 0
+		geturl(url,num)
+		return render_template('analysis.html', myurl=url, mynum=num)		
 
+def geturl(url, num):
+	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
+	f = open('urls.txt', 'r')
+	num = 4
+
+	while True:
+		line = f.readline()
+		if not line:
+			break
+		url.append(line[:len(line)-2])
+	id_ = 0
+	crawling(url[id_],id_,es)
+	id_ = 1
+	crawling(url[id_],id_,es)
+	id_ = 2
+	crawling(url[id_],id_,es)
+	id_ = 3
+	crawling(url[id_],id_,es)
+	
 def crawling(url,id_,es):
 	words = []
 	freq = []
@@ -226,4 +246,5 @@ if __name__ == '__main__':
 
 	print(top10)
 	print(top3)
+	
 

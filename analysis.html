@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC “-//W3C//DTD HTML 4.0 Transitional//EN”>
+<meta charset = "utf-8">
+
+<html>
+<head>
+	<title>URL 리스트</title>
+	<style type="text/css">
+		table, tr, td{
+			border : 1px solid black;
+			text-align: center;
+		}
+		td{
+			width: 20px;
+		}
+	</style>
+	<body>
+	<script type="text/javascript">
+		var rows={{mynum}};
+		var cnt=0;
+		var table = "";
+
+		for(var i=0;i<rows;i++)
+		{
+			table +='<tr>';
+			
+			table += '<td>'+(cnt+1)+'</td>';
+			table += '<td>'+'{{myurl[cnt]}}'+'</td>';
+			cnt++;
+
+			table+='</tr>';
+		}
+
+		document.write("<table border=1>"+table+'</table>')
+		
+	</script>
+	</body>
+</head>
+
+</html>
