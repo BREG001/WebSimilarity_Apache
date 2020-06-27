@@ -5,7 +5,11 @@
 <head>
 	<title> Cos-similarity </title>
 	<style>
-
+		table { border-collapse:collapse; }
+		th, td{
+			border : 1px solid black;
+			text-align: center;
+		}
 	</style>
 </head>
 <body>
@@ -18,9 +22,9 @@
 			<th>cos-similarity</th>
 		</thead>
 		<tbody id="my_tbody">
-			{% for i in range(1,11) %}
+			{% for i in range(0,3) %}
 			<tr>
-				<td>i</td>
+				<td>{{i+1}}</td>
 				<td></td>
 				<td></td>
 			</tr>
