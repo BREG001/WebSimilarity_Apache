@@ -24,6 +24,7 @@ def analysis():
 	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 	if request.method =='POST':
 		url = []
+		words = []
 		if (request.form('url_one')):
 			url.append(request.form('url_one'))
 		elif (request.form('file'))
@@ -36,9 +37,11 @@ def analysis():
 				line = f_off.readline()
 				if not line:
 					break
-				num += 1
 				url.append(line[:len(line)-2])
-		return render_template('analysis.html', num=num, url=url)
+				crawling(url[num],num,es)
+				words.append(es.get(index='data', doc_type='word', id=num)['_source'].get('num'))
+				num += 1
+		return render_template('analysis.html', num=num, url=url, words=words)
 
 def crawling(url,id_,es):
 	words = []
@@ -71,7 +74,7 @@ def crawling(url,id_,es):
 						break
 					k += 1
 
-	e={ "words":words, "frequencies":freq }
+	e={ "num":n, "words":words, "frequencies":freq }
 	es.index(index='data', doc_type='word', id=id_, body=e)
 
 def compute_tf(list1,count):
