@@ -30,6 +30,7 @@ def analysis_text():
 		words = []
 		timeList = []
 		res = []
+		num = 0
 		if (request.form['url_one'] != ""):
 			url.append(request.form['url_one'])
 			time_ = time.time()
@@ -46,6 +47,7 @@ def analysis_file():
 		words = []
 		timeList = []
 		res = []
+		num = 0
 		if (request.files['file'] != ""):
 			num = 0
 			file = './urls.txt'
