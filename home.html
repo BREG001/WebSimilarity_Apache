@@ -7,15 +7,21 @@
 	<style>
 
 	</style>
+	<script type="text/javascript" language="javascript">
+		
+	</script>
 </head>
 
 <body>
 	<div style="margin: auto;">
 		<h1> Apache Similarity Calculator </h1>
-		<form method="POST" action="/analysis" enctype="multipart/form-data">
+		<form method="POST" action="/analysis_text" enctype="multipart/form-data">
 			<input type="text" name="url_one"/>
+			<button type="submit"> TEXT </button> <br>
+		</form>
+		<form method="POST" action="/analysis_file" enctype="multipart/form-data">
 			<input type="file" name="file"/>
-			<button type="submit"> Submit </button> <br>
+			<button type="submit"> FILE </button> <br>
 		</form>
 	</div>
 </body>

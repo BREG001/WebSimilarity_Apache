@@ -11,16 +11,26 @@
 			text-align: center;
 		}
 	</style>
-
+	<script language="javascript">
+		function tfidfPopup() {
+			window.open("./tfidf", "tfidf", "width=400, height=300, left=100, top=100")
+		}
+		function cossimPopup() {
+			window.open("./cossim", "tfidf", "width=400, height=300, left=100, top=100")
+		}
+	</script>
 </head>
 
 <body>
 	<div style="margin: auto;">
 		<h1> Apache Similarity Calculator </h1>
-		<form method="POST" action="/analysis">
-			<input type="text" name="url_one" value="enter the url..."/>
-			<button type="submit"> Submit </button> <br>
+		<form method="POST" action="/analysis_text" enctype="multipart/form-data">
+			<input type="text" name="url_one"/>
+			<button type="submit"> TEXT </button> <br>
+		</form>
+		<form method="POST" action="/analysis_file" enctype="multipart/form-data">
 			<input type="file" name="file"/>
+			<button type="submit"> FILE </button> <br>
 		</form>
 	</div>
 	<div style="margin: auto;">
@@ -41,10 +51,10 @@
 				<td>{{words[i]}}</td>
 				<td></td>
 				<td>
-					<input type="button", name=>
+					<input type="button", name="tfidf", onclick="tfidfPopup()">
 				</td>
 				<td>
-					
+					<input type="button", name="tfidf", onclick="cossimPopup()">
 				</td>
 			</tr>
 			{% endfor %}
