@@ -1,4 +1,0 @@
-http://airavata.apache.org/
-http://buildr.apache.org/
-http://myfaces.apache.org/
-http://buildr.apache.org/

@@ -10,8 +10,9 @@ from numpy.linalg import norm
 from math import log
 from elasticsearch import Elasticsearch
 from nltk.corpus import stopwords
-
+from werkzeug.utils import secure_filename
 app = Flask(__name__)
+
 es_host="127.0.0.1"
 es_port="9200"
 
@@ -27,20 +28,20 @@ def analysis():
 		words = []
 		if (request.form('url_one')):
 			url.append(request.form('url_one'))
-		elif (request.form('file'))
+		elif (request.form('file')):
 			num = 0
-			f_on = request.files['file']
-			f_on.save('urls.txt')
-			f_off = open('urls.txt', 'r')
+			f = request.files['file']
+			f.save("/home/anaconda/WebSimilarity_Apache" + secure_filename(f.filename))
 
 			while True:
-				line = f_off.readline()
+				line = f.readline()
 				if not line:
 					break
 				url.append(line[:len(line)-2])
 				crawling(url[num],num,es)
 				words.append(es.get(index='data', doc_type='word', id=num)['_source'].get('num'))
 				num += 1
+
 		return render_template('analysis.html', num=num, url=url, words=words)
 
 def crawling(url,id_,es):
