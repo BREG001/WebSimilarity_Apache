@@ -10,6 +10,7 @@ from numpy.linalg import norm
 from math import log
 from elasticsearch import Elasticsearch
 from nltk.corpus import stopwords
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 es_host="127.0.0.1"
@@ -25,14 +26,16 @@ def analysis():
 	if request.method =='POST':
 		url = []
 		words = []
-		if (request.form('url_one')):
-			url.append(request.form('url_one'))
-		elif (request.form('file'))
+		if (request.form['url_one'] != ""):
+			url.append(request.form['url_one'])
+			crawling(url[0],0,es)
+			words.append(es.get(index='data', doc_type='word', id=0)['_source'].get('num'))
+			num = 1
+		elif (request.files['file'] != ""):
 			num = 0
-			f_on = request.files['file']
-			f_on.save('urls.txt')
+			f = request.files['file']
+			f.save(secure_filename(f.filename))
 			f_off = open('urls.txt', 'r')
-
 			while True:
 				line = f_off.readline()
 				if not line:
@@ -48,34 +51,32 @@ def crawling(url,id_,es):
 	freq = []
 	swlist = []
 	n = 0
-
+	page = 0
 	page = requests.get(url)
-	soup = BeautifulSoup(page.content, "html.parser")
-	p = soup.find_all('p')
-
-	for sw in stopwords.words("english"):
-		swlist.append(sw)
-	
-	for i in range(len(p)):
-		p_split = p[i].text.split()
-		for j in range(len(p_split)):
-			p_split[j] = re.sub('[-=+,#/\?:^$.@*\"~&%!\\|\(\)\[\]\<\>`\']', '', p_split[j])
-			p_split[j] = p_split[j].lower()
-			k = 0
-			if p_split[j] not in swlist:
-				while (1):
-					if (k == n):
-						words.append(p_split[j])
-						freq.append(1)
-						n += 1
-						break
-					elif (words[k] == p_split[j]):
-						freq[k] += 1
-						break
-					k += 1
-
-	e={ "num":n, "words":words, "frequencies":freq }
-	es.index(index='data', doc_type='word', id=id_, body=e)
+	if (page != 0):
+		soup = BeautifulSoup(page.content, "html.parser")
+		p = soup.find_all('p')
+		for sw in stopwords.words("english"):
+			swlist.append(sw)
+		for i in range(len(p)):
+			p_split = p[i].text.split()
+			for j in range(len(p_split)):
+				p_split[j] = re.sub('[-=+,#/\?:^$.@*\"~&%!\\|\(\)\[\]\<\>`\']', '', p_split[j])
+				p_split[j] = p_split[j].lower()
+				k = 0
+				if p_split[j] not in swlist:
+					while (1):
+						if (k == n):
+							words.append(p_split[j])
+							freq.append(1)
+							n += 1
+							break
+						elif (words[k] == p_split[j]):
+							freq[k] += 1
+							break
+						k += 1
+		e={ "num":n, "words":words, "frequencies":freq }
+		es.index(index='data', doc_type='word', id=id_, body=e)
 
 def compute_tf(list1,count):
 	tf_d = []
@@ -204,39 +205,5 @@ def top3_sim(id_,n,es):
 
 
 if __name__ == '__main__':
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
-	f = open('urls.txt', 'r')
-	num = 4
-	time_ = 0.0
-	top3 = {}
-	top10 = {}
-	url = []
-
-	while True:
-		line = f.readline()
-		if not line:
-			break
-		url.append(line[:len(line)-2])
-	print(url)
-	id_ = 0
-	crawling(url[id_],id_,es)
-	id_ = 1
-	crawling(url[id_],id_,es)
-	id_ = 2
-	crawling(url[id_],id_,es)
-	id_ = 3
-	crawling(url[id_],id_,es)
-
-	top10[0] = compute_top10(0,num,es)
-	top3[0] = top3_sim(0,num,es)
-	top10[1] = compute_top10(1,num,es)
-	top3[1] = top3_sim(1,num,es)
-	top10[2] = compute_top10(2,num,es)
-	top3[2] = top3_sim(2,num,es)
-	top10[3] = compute_top10(3,num,es)
-	top3[3] = top3_sim(3,num,es)
-
-	print(top10)
-	print(top3)
-	
+	app.run(debug=True)
 

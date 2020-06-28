@@ -7,8 +7,8 @@ cp ./home.html ./templates
 cp ./analysis.html ./templates
 cp ./tfidf.html ./templates
 cp ./cossim.html ./templates
-echo "download files..."
-pip3 install nltk
+echo "download modules..."
+
 
 echo "run Flask..."
 flask run

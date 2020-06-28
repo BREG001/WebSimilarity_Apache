@@ -18,9 +18,9 @@
 	<div style="margin: auto;">
 		<h1> Apache Similarity Calculator </h1>
 		<form method="POST" action="/analysis">
-			<input type="text" name="url_one" value="enter the url...">
+			<input type="text" name="url_one" value="enter the url..."/>
 			<button type="submit"> Submit </button> <br>
-			<input type="file" name = "file" id="file">
+			<input type="file" name="file"/>
 		</form>
 	</div>
 	<div style="margin: auto;">
@@ -31,7 +31,7 @@
 			<th>words</th>
 			<th>time</th>
 			<th>TF-IDF</th>
-			<th>COS_similarity</th>
+			<th>cos Similarity</th>
 		</thead>
 		<tbody id="my_tbody">
 			{% for i in range(0,num) %}
