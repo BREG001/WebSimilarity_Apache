@@ -36,25 +36,59 @@
 	<div style="margin: auto;">
 		<table>
 		<thead>
-			<th>result</th>
-			<th>url</th>
-			<th>words</th>
-			<th>time</th>
+			<th>RESULT</th>
+			<th>URL</th>
+			<th>WORDS</th>
+			<th>TIME (sec)</th>
 			<th>TF-IDF</th>
-			<th>cos Similarity</th>
+			<th>COS Similarity</th>
 		</thead>
 		<tbody id="my_tbody">
 			{% for i in range(0,num) %}
 			<tr>
-				<td></td>
-				<td>{{url[i]}}</td>
-				<td>{{words[i]}}</td>
-				<td></td>
 				<td>
-					<input type="button", name="tfidf", onclick="tfidfPopup({{num}},{{i}})">
+					{% if res[i] == 0 %}
+					SUCCESS
+					{% elif res[i] == 1 %}
+					FAILURE
+					{% elif res[i] == 2 %}
+					OVERLAP
+					{% else %}
+					ERROR
+					{% endif %}
 				</td>
 				<td>
-					<input type="button", name="cossim", onclick="cossimPopup({{num}},{{i}})">
+					{{url[i]}}
+				</td>
+				<td>
+					{% if res[i] == 0 %}
+					{{words[i]}}
+					{% elif res[i] == 2 %}
+					{{words[i]}}
+					{% endif %}
+				</td>
+				<td>
+					{% if res[i] == 0 %}
+					{{time[i]}}sec
+					{% elif res[i] == 2 %}
+					{{time[i]}}sec
+					{% endif %}
+				</td>
+				<td>
+					{% if res[i] == 0 %}
+						{% if num != 1 %}
+						<input type="button", name="tfidf", onclick="tfidfPopup({{num}},{{i}})", value=" SHOW ">
+						{% endif %}
+					{% elif res[i] == 2 %}
+					<input type="button", name="tfidf", onclick="tfidfPopup({{num}},{{i}})", value=" SHOW ">
+					{% endif %}
+				</td>
+				<td>
+					{% if res[i] == 0 %}
+					<input type="button", name="cossim", onclick="cossimPopup({{num}},{{i}})", value=" SHOW ">
+					{% elif res[i] == 2 %}
+					<input type="button", name="cossim", onclick="cossimPopup({{num}},{{i}})", value=" SHOW ">
+					{% endif %}
 				</td>
 			</tr>
 			{% endfor %}

@@ -15,7 +15,6 @@ from urllib.request import urlopen
 from urllib.request import HTTPError
 
 app = Flask(__name__)
-
 es_host="127.0.0.1"
 es_port="9200"
 es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
@@ -29,19 +28,24 @@ def analysis_text():
 	if request.method =='POST':
 		url = []
 		words = []
-
+		timeList = []
+		res = []
 		if (request.form['url_one'] != ""):
 			url.append(request.form['url_one'])
-			crawling(url[0],0)
+			time_ = time.time()
+			res.append(crawling(url[0],0))
+			timeList.append(round(time.time()-time_,3))
 			words.append(es.get(index='data', doc_type='word', id=0)['_source'].get('num'))
 			num = 1
-		return render_template('analysis.html', num=num, url=url, words=words)
+		return render_template('analysis.html', res=res, num=num, url=url, words=words, time=timeList)
 
 @app.route('/analysis_file', methods=['GET', 'POST'])
 def analysis_file():
 	if request.method =='POST':
 		url = []
 		words = []
+		timeList = []
+		res = []
 		if (request.files['file'] != ""):
 			num = 0
 			file = './urls.txt'
@@ -53,14 +57,19 @@ def analysis_file():
 			f_off = open('urls.txt', 'r')
 			while True:
 				line = f_off.readline()
-				print(line)
 				if not line:
 					break
-				url.append(line[:len(line)-2])
-				crawling(url[num],num)
+				url.append(line[:len(line)-1])
+				time_ = time.time()
+				res.append(crawling(url[num],num))
+				for k in range(0,num):
+					if ((res[k] == 0)and(url[num] == url[k])):
+						res[num] = 2
+						break
+				timeList.append(round(time.time()-time_,3))
 				words.append(es.get(index='data', doc_type='word', id=num)['_source'].get('num'))
 				num += 1
-		return render_template('analysis.html', num=num, url=url, words=words)
+		return render_template('analysis.html', res=res, num=num, url=url, words=words, time=timeList)
 
 @app.route('/analysis_tfidf', methods=['GET', 'POST'])
 def analysis_tfidf():
@@ -68,8 +77,8 @@ def analysis_tfidf():
 		num = request.form['num']
 		url = request.form['url']
 		words = request.form['words']
-
-		return render_template('analysis.html', num=num, url=url, words=words)
+		time = request.form['time']
+		return render_template('analysis.html', res=res, num=num, url=url, words=words, time=time)
 
 @app.route('/analysis_cossim', methods=['GET', 'POST'])
 def analysis_cossim():
@@ -77,8 +86,8 @@ def analysis_cossim():
 		num = request.form['num']
 		url = request.form['url']
 		words = request.form['words']
-
-		return render_template('analysis.html', num=num, url=url, words=words, time=time)
+		time = request.form['time']
+		return render_template('analysis.html', res=res, num=num, url=url, words=words, time=time)
 
 @app.route('/tfidf/<n>/<id_>', methods=['GET'])
 def popupTfidf(n,id_):
@@ -98,8 +107,8 @@ def crawling(url,id_):
 	words = []
 	freq = []
 	swlist = []
-	res = 0
 	n = 0
+	res = 0
 	try:
 		url_ = urlopen(url)
 	except HTTPError as e:
@@ -131,8 +140,9 @@ def crawling(url,id_):
 							freq[k] += 1
 							break
 						k += 1
-		body_={ "url":url, "num":n, "words":words, "frequencies":freq, "result":res }
-		es.index(index='data', doc_type='word', id=id_, body=body_)
+	body_={ "url":url, "num":n, "words":words, "frequencies":freq, "result":res }
+	es.index(index='data', doc_type='word', id=id_, body=body_)
+	return res
 
 def compute_tf(list1,count):
 	tf_d = []
@@ -140,14 +150,11 @@ def compute_tf(list1,count):
 	for wordcnt in list1:
 		tf_d.append(wordcnt / count)
 		i+=1
-
 	return tf_d
 
 def compute_idf(n):
-
 	bow = set()
 	idf_d = []
-
 	for i in range(0,n):
 		res = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
 		for word in res:
@@ -162,7 +169,6 @@ def compute_idf(n):
 				cnt+=1
 		idf_d.append(log(n/cnt))
 		j+=1
-
 	return idf_d
 
 def compute_tfidf(id_,list_,count,n):
@@ -198,7 +204,7 @@ def compute_top10(id_,n):
 	for i in range(0,10):
 		top.append(stfidf[i][0])
 		top_tfidf.append(stfidf[i][1])
-	result['time'] = time.time() - start
+	result['time'] = round(time.time() - start, 3)
 	result['words'] = top
 	result['tfidf'] = top_tfidf
 	return result
@@ -254,12 +260,11 @@ def top3_sim(id_,n):
 		url.append(es.get(index='data', doc_type='word', id=largest)['_source'].get('url'))
 		top.append(cosList[largest])
 		cosList[largest]=-1.0
-	result['time'] = time.time() - start
+	result['time'] = round(time.time() - start,3)
 	result['url'] = url
 	result['cossim'] = top
 	return result
 
 if __name__ == '__main__':
-	
 	app.run(debug=True)
 
