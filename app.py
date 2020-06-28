@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 #-*- coding: utf-8 -*-
 
-import sys, re, requests, math, nltk, numpy, time, operator
+import sys, re, requests, math, nltk, numpy, time, operator, os
 nltk.download('stopwords')
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, session
@@ -11,6 +11,8 @@ from math import log
 from elasticsearch import Elasticsearch
 from nltk.corpus import stopwords
 from werkzeug.utils import secure_filename
+from urllib.request import urlopen
+from urllib.request import HTTPError
 
 app = Flask(__name__)
 es_host="127.0.0.1"
@@ -20,8 +22,8 @@ es_port="9200"
 def home():
 	return render_template('home.html')
 
-@app.route('/analysis', methods=['GET', 'POST'])
-def analysis():
+@app.route('/analysis_text', methods=['GET', 'POST'])
+def analysis_text():
 	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 	if request.method =='POST':
 		url = []
@@ -31,8 +33,20 @@ def analysis():
 			crawling(url[0],0,es)
 			words.append(es.get(index='data', doc_type='word', id=0)['_source'].get('num'))
 			num = 1
-		elif (request.files['file'] != ""):
+		return render_template('analysis.html', num=num, url=url, words=words)
+
+@app.route('/analysis_file', methods=['GET', 'POST'])
+def analysis_file():
+	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
+	if request.method =='POST':
+		url = []
+		words = []
+		if (request.files['file'] != ""):
 			num = 0
+			file = './urls.txt'
+			print(os.path.isfile(file))
+			if (os.path.isfile(file)):
+				os.remove(file)
 			f = request.files['file']
 			f.save(secure_filename(f.filename))
 			f_off = open('urls.txt', 'r')
@@ -46,14 +60,42 @@ def analysis():
 				num += 1
 		return render_template('analysis.html', num=num, url=url, words=words)
 
+@app.route('/analysis_tfidf', methods=['GET', 'POST'])
+def analysis_tfidf():
+	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
+	if request.method =='POST':
+		num = request.form['num']
+		url = request.form['url']
+		words = request.form['words']
+		
+		return render_template('analysis.html', num=num, url=url, words=words)
+
+@app.route('/analysis_cossim', methods=['GET', 'POST'])
+def analysis_cossim():
+	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
+	if request.method =='POST':
+		num = request.form['num']
+		url = request.form['url']
+		words = request.form['words']
+		
+		return render_template('analysis.html', num=num, url=url, words=words)
+
 def crawling(url,id_,es):
 	words = []
 	freq = []
 	swlist = []
+	res = 0
 	n = 0
-	page = 0
-	page = requests.get(url)
-	if (page != 0):
+	try:
+		url_ = urlopen(url)
+	except HTTPError as e:
+		print(e)
+		res = 1
+	except ValueError as e:
+		print(e)
+		res = 1
+	else:
+		page = requests.get(url)
 		soup = BeautifulSoup(page.content, "html.parser")
 		p = soup.find_all('p')
 		for sw in stopwords.words("english"):
@@ -75,8 +117,16 @@ def crawling(url,id_,es):
 							freq[k] += 1
 							break
 						k += 1
-		e={ "num":n, "words":words, "frequencies":freq }
-		es.index(index='data', doc_type='word', id=id_, body=e)
+		body_={ "url":url, "num":n, "words":words, "frequencies":freq, "result":res }
+		es.index(index='data', doc_type='word', id=id_, body=body_)
+
+@app.route('/tfidf')
+def popupTfidf():
+	return render_template('tfidf.html')
+
+@app.route('/cossim')
+def popupCossim():
+	return render_template('cossim.html')
 
 def compute_tf(list1,count):
 	tf_d = []
