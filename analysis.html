@@ -3,7 +3,7 @@
 
 <html>
 <head>
-	<title> URL list </title>
+	<title> Analysis Page </title>
 	<style>
 		table { border-collapse:collapse; }
 		th, td{
@@ -12,11 +12,11 @@
 		}
 	</style>
 	<script language="javascript">
-		function tfidfPopup() {
-			window.open("./tfidf", "tfidf", "width=400, height=300, left=100, top=100")
+		function tfidfPopup( num, i ) {
+			window.open("./tfidf/" + num + "/" + i, "tfidf", "width=400, height=300, left=100, top=100")
 		}
-		function cossimPopup() {
-			window.open("./cossim", "tfidf", "width=400, height=300, left=100, top=100")
+		function cossimPopup( num, i ) {
+			window.open("./cossim/" + num + "/" + i, "cossim", "width=400, height=300, left=100, top=100")
 		}
 	</script>
 </head>
@@ -51,10 +51,10 @@
 				<td>{{words[i]}}</td>
 				<td></td>
 				<td>
-					<input type="button", name="tfidf", onclick="tfidfPopup()">
+					<input type="button", name="tfidf", onclick="tfidfPopup({{num}},{{i}})">
 				</td>
 				<td>
-					<input type="button", name="tfidf", onclick="cossimPopup()">
+					<input type="button", name="cossim", onclick="cossimPopup({{num}},{{i}})">
 				</td>
 			</tr>
 			{% endfor %}

@@ -18,6 +18,7 @@ app = Flask(__name__)
 
 es_host="127.0.0.1"
 es_port="9200"
+es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 
 @app.route('/')
 def home():
@@ -25,21 +26,19 @@ def home():
 
 @app.route('/analysis_text', methods=['GET', 'POST'])
 def analysis_text():
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 	if request.method =='POST':
 		url = []
 		words = []
 
 		if (request.form['url_one'] != ""):
 			url.append(request.form['url_one'])
-			crawling(url[0],0,es)
+			crawling(url[0],0)
 			words.append(es.get(index='data', doc_type='word', id=0)['_source'].get('num'))
 			num = 1
 		return render_template('analysis.html', num=num, url=url, words=words)
 
 @app.route('/analysis_file', methods=['GET', 'POST'])
 def analysis_file():
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 	if request.method =='POST':
 		url = []
 		words = []
@@ -53,45 +52,49 @@ def analysis_file():
 			f.save(secure_filename(f.filename))
 			f_off = open('urls.txt', 'r')
 			while True:
-				line = f.readline()
+				line = f_off.readline()
+				print(line)
 				if not line:
 					break
 				url.append(line[:len(line)-2])
-				crawling(url[num],num,es)
+				crawling(url[num],num)
 				words.append(es.get(index='data', doc_type='word', id=num)['_source'].get('num'))
 				num += 1
-
 		return render_template('analysis.html', num=num, url=url, words=words)
 
 @app.route('/analysis_tfidf', methods=['GET', 'POST'])
 def analysis_tfidf():
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 	if request.method =='POST':
 		num = request.form['num']
 		url = request.form['url']
 		words = request.form['words']
-		
+
 		return render_template('analysis.html', num=num, url=url, words=words)
 
 @app.route('/analysis_cossim', methods=['GET', 'POST'])
 def analysis_cossim():
-	es = Elasticsearch([{'host':es_host, 'port':es_port}], timeout=30)
 	if request.method =='POST':
 		num = request.form['num']
 		url = request.form['url']
 		words = request.form['words']
-		
-		return render_template('analysis.html', num=num, url=url, words=words)
 
-@app.route('/tfidf')
-def popupTfidf():
-	return render_template('tfidf.html')
+		return render_template('analysis.html', num=num, url=url, words=words, time=time)
 
-@app.route('/cossim')
-def popupCossim():
-	return render_template('cossim.html')
+@app.route('/tfidf/<n>/<id_>', methods=['GET'])
+def popupTfidf(n,id_):
+	n_ = int(n)
+	id__ = int(id_)
+	top10 = compute_top10(id__,n_)
+	return render_template('tfidf.html', words=top10['words'], tfidf=top10['tfidf'])
 
-def crawling(url,id_,es):
+@app.route('/cossim/<n>/<id_>', methods=['GET'])
+def popupCossim(n,id_):
+	n_ = int(n)
+	id__ = int(id_)
+	top3 = top3_sim(id__,n_)
+	return render_template('cossim.html', url=top3['url'], cossim=top3['cossim'])
+
+def crawling(url,id_):
 	words = []
 	freq = []
 	swlist = []
@@ -140,7 +143,7 @@ def compute_tf(list1,count):
 
 	return tf_d
 
-def compute_idf(n,es):
+def compute_idf(n):
 
 	bow = set()
 	idf_d = []
@@ -162,50 +165,50 @@ def compute_idf(n,es):
 
 	return idf_d
 
-def compute_tfidf(list_,count,n,es):
+def compute_tfidf(id_,list_,count,n):
 	tf = []
 	idf = []
 	res = []
 	tf = compute_tf(list_,count)
-	idf = compute_idf(n,es)
-
+	idf = compute_idf(n)
 	if (n==1):
 		for i in range(0,count):
 			res.append(tf[i])
 	else:
 		for i in range(0,count):
 			res.append(tf[i]*idf[i])
-
 	e = es.get(index='data', doc_type='word', id=id_)['_source']
 	e['tfidf'] = res
 	es.index(index='data', doc_type='word', id=id_, body=e)
 	return res
 
-def compute_top10(id_,n,es):
+def compute_top10(id_,n):
+	result = {}
 	start = time.time()
 	freq = es.get(index='data', doc_type='word', id=id_)['_source'].get('frequencies')
 	length = len(freq)
 	word = es.get(index='data', doc_type='word', id=id_)['_source'].get('words')
 	top = []
+	top_tfidf = []
 	tfidf = {}
-
-	compute_tfidf(freq,length,n,es)
-
+	tfidf_res = compute_tfidf(id_,freq,length,n)
 	for i in range(0,length):
-		tfidf[word[i]] = freq[i]
-	stfidf = sorted(tfidf.items(), key=operator.itemgetter(1))
+		tfidf[word[i]] = tfidf_res[i]
+	stfidf = sorted(tfidf.items(), key=operator.itemgetter(1), reverse=True)
 	for i in range(0,10):
 		top.append(stfidf[i][0])
-	print(time.time()-start)
-	return top
+		top_tfidf.append(stfidf[i][1])
+	result['time'] = time.time() - start
+	result['words'] = top
+	result['tfidf'] = top_tfidf
+	return result
 
-def cosine_sim(listA,listB,n,es):
+def cosine_sim(listA,listB,n):
 	u = []
 	v = []
 	valu = 0
 	valv = 0
 	bow = set()
-
 	for i in range(0,n):
 		res = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
 		for word in res:
@@ -225,38 +228,38 @@ def cosine_sim(listA,listB,n,es):
 				break
 		v.append(valv)
 	dotpro = numpy.dot(u,v)
-
 	return (dotpro) / (norm(u) * norm(v))
 
-def top3_sim(id_,n,es):
+def top3_sim(id_,n):
 	top = []
 	cosList=[]
+	url = []
 	start = time.time()
 	listA = es.get(index='data', doc_type='word', id=id_)['_source'].get('words')
+	result = {}
 	for i in range(0,n):
 		if (id_==i):
 			cosList.append(-1.0)
 		else:
 			listB = es.get(index='data', doc_type='word', id=i)['_source'].get('words')
-			cosList.append(cosine_sim(listA,listB,n,es))
-
+			cosList.append(cosine_sim(listA,listB,n))
 	e = es.get(index='data', doc_type='word', id=id_)['_source']
 	e['cos'] = cosList
 	es.index(index='data', doc_type='word', id=id_, body=e)
-
 	for i in range(0,3):
 		largest=0
 		for j in range(0,n):
 			if (cosList[largest]<cosList[j]):
 				largest=j
-		top.append(largest)
+		url.append(es.get(index='data', doc_type='word', id=largest)['_source'].get('url'))
+		top.append(cosList[largest])
 		cosList[largest]=-1.0
-
-	print(time.time()-start)
-
-	return top
-
+	result['time'] = time.time() - start
+	result['url'] = url
+	result['cossim'] = top
+	return result
 
 if __name__ == '__main__':
+	
 	app.run(debug=True)
 

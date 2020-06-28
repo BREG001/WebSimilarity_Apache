@@ -25,8 +25,8 @@
 			{% for i in range(0,10) %}
 			<tr>
 				<td>{{i+1}}</td>
-				<td></td>
-				<td></td>
+				<td>{{words[i]}}</td>
+				<td>{{tfidf[i]}}</td>
 			</tr>
 			{% endfor %}
 		</tbody>
