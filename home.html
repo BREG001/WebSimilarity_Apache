@@ -12,10 +12,10 @@
 <body>
 	<div style="margin: auto;">
 		<h1> Apache Similarity Calculator </h1>
-		<form method="POST" action="/analysis">
-			<input type="text" name="url_one" value="enter the url...">
+		<form method="POST" action="/analysis" enctype="multipart/form-data">
+			<input type="text" name="url_one"/>
+			<input type="file" name="file"/>
 			<button type="submit"> Submit </button> <br>
-			<input type="file" name = "file" id="file">
 		</form>
 	</div>
 </body>
